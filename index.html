@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090713">
+<title>The Buzzer Show</title>
+<style>
+:root{--gold:#f5c85b;--red:#e6293d;--blue:#2779ff;--ink:#090713}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#fff;font-family:Arial,Helvetica,sans-serif;background:radial-gradient(ellipse at 50% 5%,#3b174d 0,#171027 38%,#080711 78%);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:repeating-conic-gradient(from 0deg at 50% -15%,#ffffff0d 0deg 2deg,transparent 2deg 12deg);mask-image:linear-gradient(#000,transparent 75%)}
+header{position:relative;text-align:center;padding:24px 16px 10px}
+.kicker{font-size:.72rem;letter-spacing:.42em;color:var(--gold);font-weight:800}
+h1{margin:8px 0 4px;font-size:clamp(2.2rem,7vw,4.7rem);line-height:.95;letter-spacing:.04em;text-transform:uppercase;text-shadow:0 4px 0 #000,0 0 28px #ffcb5c55}
+.subtitle{margin:10px 0;color:#d8cce9;font-size:.92rem}
+.stage{max-width:1050px;margin:auto;padding:12px 18px 28px;position:relative}
+.lights{display:flex;justify-content:center;gap:clamp(12px,4vw,38px);margin:8px auto 22px}
+.lights i{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 14px var(--gold)}
+.status{text-align:center;color:var(--gold);font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:.82rem;min-height:22px;margin-bottom:14px}
+.buzzers{display:grid;grid-template-columns:1fr 1fr;gap:clamp(12px,3vw,28px);align-items:stretch}
+.buzzers.single{grid-template-columns:minmax(0,540px);justify-content:center}
+.player{border:1px solid #ffffff24;border-radius:24px;padding:clamp(12px,3vw,24px);background:linear-gradient(145deg,#ffffff13,#ffffff05);box-shadow:0 18px 48px #0008,inset 0 1px #ffffff1c;text-align:center;position:relative;overflow:hidden}
+.player:before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:5px;background:var(--accent);box-shadow:0 0 22px var(--accent)}
+.player h2{font-size:clamp(1rem,3vw,1.45rem);letter-spacing:.16em;margin:8px 0 18px;text-transform:uppercase}
+.buzzer{width:min(100%,310px);aspect-ratio:1;border-radius:50%;border:10px solid #24212d;background:radial-gradient(circle at 35% 25%,#fff9,#fff0 18%),radial-gradient(circle at 50% 35%,var(--accent),color-mix(in srgb,var(--accent),#160b18 60%) 70%);box-shadow:inset 0 9px 15px #fff5,inset 0 -18px 24px #0009,0 12px 0 #05040a,0 20px 35px #0009,0 0 32px color-mix(in srgb,var(--accent),transparent 55%);color:#fff;font-size:clamp(1.5rem,5vw,2.5rem);font-weight:1000;letter-spacing:.08em;text-shadow:0 3px 5px #0008;cursor:pointer;touch-action:manipulation;transition:transform .12s,filter .12s;position:relative}
+.buzzer:active{transform:translateY(8px) scale(.98);box-shadow:inset 0 9px 15px #fff5,inset 0 -18px 24px #0009,0 4px 0 #05040a}
+.buzzer:disabled{filter:grayscale(.7) brightness(.55);cursor:not-allowed}
+.player.red{--accent:var(--red)}.player.blue{--accent:var(--blue)}
+.player .name{margin:16px 0 2px;color:#ddd;font-weight:800;letter-spacing:.12em}
+.player .hint{font-size:.78rem;color:#a99db9;margin:5px 0 0}
+.controls{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin:24px auto 0}
+button.control{border:1px solid #ffffff35;border-radius:12px;padding:12px 17px;background:#ffffff12;color:#fff;font-weight:800;cursor:pointer}
+button.control.primary{background:linear-gradient(135deg,#f4ce72,#b87b25);color:#201307;border:0;box-shadow:0 5px 18px #d99c3c44}
+button.control:active{transform:translateY(1px)}
+.settings{margin:18px auto 0;padding:14px 16px;max-width:680px;border:1px solid #ffffff20;border-radius:16px;background:#ffffff09;display:flex;justify-content:center;gap:18px;flex-wrap:wrap;color:#ddd;font-size:.9rem}
+.settings label{display:flex;gap:8px;align-items:center;cursor:pointer}
+input{accent-color:var(--gold);width:18px;height:18px}
+#result{position:fixed;inset:0;z-index:5;display:none;align-items:center;justify-content:center;flex-direction:column;background:#09030beF;text-align:center}
+#result.show{display:flex;animation:fade .18s ease-out}
+.xmark{font-size:min(60vw,390px);font-weight:1000;line-height:.8;color:#f20d2d;text-shadow:0 0 12px #ff002f,0 0 55px #f00;animation:slam .32s cubic-bezier(.2,1.5,.5,1)}
+#winner{font-size:clamp(1.3rem,5vw,2.8rem);font-weight:1000;letter-spacing:.12em;margin-top:26px;text-transform:uppercase}
+#result small{color:#c9bdd1;margin-top:10px;letter-spacing:.1em}
+footer{text-align:center;color:#81768f;font-size:.72rem;padding:0 12px 22px}
+@keyframes slam{from{transform:scale(2.4) rotate(-15deg);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@media(max-width:620px){header{padding-top:18px}.stage{padding:8px 12px 20px}.buzzers{gap:10px}.player{padding:12px 8px;border-radius:17px}.buzzer{border-width:7px;font-size:1.25rem}.player h2{font-size:.9rem;margin-bottom:12px}.player .name{font-size:.8rem}.player .hint{font-size:.68rem}.controls{margin-top:18px}.control{padding:11px 13px!important}}
+@media(max-width:380px){.buzzers{grid-template-columns:1fr}.buzzer{width:min(70vw,245px)}}
+</style>
+</head>
+<body>
+<header>
+  <div class="kicker">THE LIVE SHOW EXPERIENCE</div>
+  <h1>The Buzzer Show</h1>
+  <p class="subtitle">Two acts. Two judges. One chance to buzz.</p>
+</header>
+<main class="stage">
+  <div class="lights" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="status" id="status" aria-live="polite">WHO'S GOING TO BUZZ FIRST?</div>
+  <section class="buzzers" id="buzzers">
+    <article class="player red" id="player1">
+      <h2>Judge One</h2>
+      <button class="buzzer" id="buzz1" type="button">BUZZ!</button>
+      <div class="name">RED BUZZER</div><p class="hint">Tap to buzz in</p>
+    </article>
+    <article class="player blue" id="player2">
+      <h2>Judge Two</h2>
+      <button class="buzzer" id="buzz2" type="button">BUZZ!</button>
+      <div class="name">BLUE BUZZER</div><p class="hint">Tap to buzz in</p>
+    </article>
+  </section>
+  <div class="controls">
+    <button class="control primary" id="reset" type="button">↻ RESET ROUND</button>
+    <button class="control" id="full" type="button">⛶ FULL SCREEN</button>
+  </div>
+  <div class="settings">
+    <label><input id="enable1" type="checkbox" checked> Enable Judge One</label>
+    <label><input id="enable2" type="checkbox" checked> Enable Judge Two</label>
+    <label><input id="sound" type="checkbox" checked> Buzzer sound</label>
+    <label><input id="music" type="checkbox" checked> Dramatic music</label>
+    <label><input id="xsetting" type="checkbox" checked> Big red X</label>
+  </div>
+</main>
+<footer>Tap RESET ROUND at any time to unlock both buzzers.</footer>
+<div id="result" role="dialog" aria-modal="true" aria-label="Buzzer result">
+  <div class="xmark" id="xmark">✕</div>
+  <div id="winner">JUDGE ONE BUZZED!</div>
+  <small>ROUND LOCKED</small>
+  <button class="control primary" id="resetOverlay" type="button" style="margin-top:28px">↻ RESET ROUND</button>
+</div>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  let locked = false, audioCtx = null, musicTimer = null, musicStep = 0;
+  const buzzers = [$('buzz1'), $('buzz2')];
+  function audio(){
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+  function tone(freq, duration, type='sine', volume=.15, delay=0){
+    const ctx=audio(); if(!ctx) return;
+    const osc=ctx.createOscillator(), gain=ctx.createGain();
+    osc.type=type; osc.frequency.setValueAtTime(freq,ctx.currentTime+delay);
+    gain.gain.setValueAtTime(.0001,ctx.currentTime+delay);
+    gain.gain.exponentialRampToValueAtTime(volume,ctx.currentTime+delay+.015);
+    gain.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+delay+duration);
+    osc.connect(gain);gain.connect(ctx.destination);osc.start(ctx.currentTime+delay);osc.stop(ctx.currentTime+delay+duration+.03);
+  }
+  function startMusic(){
+    stopMusic();
+    if(!$('music').checked) return;
+    const notes=[220,196,174.6,164.8,146.8,164.8,174.6,130.8];
+    musicTimer=setInterval(()=>{if(!locked||!$('music').checked)return;tone(notes[musicStep++%notes.length],.42,'triangle',.045);},520);
+  }
+  function stopMusic(){if(musicTimer){clearInterval(musicTimer);musicTimer=null;}}
+  function playBuzzer(){
+    if(!$('sound').checked)return;
+    tone(115,.7,'sawtooth',.22);tone(108,.7,'square',.1,.03);
+  }
+  function buzz(index){
+    if(locked || !buzzers[index].disabled===false) return;
+    if(buzzers[index].disabled) return;
+    locked=true;
+    buzzers.forEach((b,i)=>b.disabled=true);
+    $('status').textContent=`JUDGE ${index+1} BUZZED FIRST!`;
+    $('winner').textContent=`JUDGE ${index+1} BUZZED!`;
+    $('xmark').style.display=$('xsetting').checked?'block':'none';
+    $('result').classList.add('show');
+    playBuzzer(); startMusic();
+  }
+  function resetRound(){
+    locked=false; stopMusic();
+    $('result').classList.remove('show');
+    $('status').textContent="WHO'S GOING TO BUZZ FIRST?";
+    buzzers.forEach((b,i)=>b.disabled=!$(`enable${i+1}`).checked);
+    $('player1').style.display=$('enable1').checked?'':'none';
+    $('player2').style.display=$('enable2').checked?'':'none';
+    $('buzzers').classList.toggle('single',$('enable1').checked!==$('enable2').checked);
+    if(!$('enable1').checked&&!$('enable2').checked)$('status').textContent='ENABLE AT LEAST ONE JUDGE';
+  }
+  buzzers.forEach((b,i)=>b.addEventListener('click',()=>buzz(i)));
+  $('reset').addEventListener('click',resetRound);
+  $('resetOverlay').addEventListener('click',resetRound);
+  $('enable1').addEventListener('change',resetRound);
+  $('enable2').addEventListener('change',resetRound);
+  $('music').addEventListener('change',()=>{if(!$('music').checked)stopMusic();else if(locked)startMusic();});
+  $('full').addEventListener('click',async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen();}catch(e){}});
+  document.addEventListener('keydown',e=>{
+    if(e.repeat)return;
+    if(e.key==='1'||e.key.toLowerCase()==='a')buzz(0);
+    if(e.key==='2'||e.key.toLowerCase()==='l')buzz(1);
+    if(e.key==='Escape'&&locked)resetRound();
+  });
+  resetRound();
+})();
+</script>
+</body>
+</html>
